@@ -29,7 +29,10 @@ jobs:
         with:
           sarif_file: tfsec.sarif
 
-      - name: Run tfsec (hard fail)
-        uses: aquasecurity/tfsec-action@v1.0.3
+      - name: Run Trivy (hard fail)
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          soft_fail: false
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1
