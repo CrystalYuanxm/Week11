@@ -29,7 +29,16 @@ jobs:
         with:
           sarif_file: tfsec.sarif
 
-      - name: Run tfsec (hard fail)
-        uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          soft_fail: false
+      - name: Fail on HIGH/CRITICAL findings
+        run: |
+          COUNT=$(jq '[.runs[].results[] | select(.level=="error")] | length' tfsec.sarif)
+          echo "=============================================="
+          echo "tfsec error-level (HIGH/CRITICAL) findings: $COUNT"
+          echo "=============================================="
+          if [ "$COUNT" -gt 0 ]; then
+            jq -r '.runs[].results[] | select(.level=="error") | "[FAIL] \(.ruleId)\n       \(.message.text)"' tfsec.sarif
+            echo ""
+            echo "Blocking merge: $COUNT security issue(s) must be fixed."
+            exit 1
+          fi
+          echo "All HIGH/CRITICAL checks passed."
