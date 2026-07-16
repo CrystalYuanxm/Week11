@@ -39,29 +39,36 @@ resource "aws_instance" "web" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.web-sg.id]
 
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  root_block_device {
+    encrypted = true
+  }
+
   tags = {
     Name = "xyuan29-web"
   }
 }
 
 resource "aws_security_group" "web-sg" {
-  name = "xyuan29-${random_pet.sg.id}-sg"
+  name        = "xyuan29-${random_pet.sg.id}-sg"
+  description = "xyuan29 lab security group"
 
   ingress {
+    description = "HTTP from internal VPC range only"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.0.0/16"]
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS outbound to VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
   }
-}
-
-output "web-address" {
-  value = "${aws_instance.web.public_dns}:8080"
 }
